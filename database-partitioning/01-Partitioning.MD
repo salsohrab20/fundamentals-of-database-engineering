@@ -391,6 +391,33 @@ Understanding the distinction between **partitioning** and **sharding** is criti
 - While partitioning simplifies data management in large tables, it also:
     - Requires **monitoring partition boundaries**.
     - Needs **scripts or logic** to add/remove partitions regularly.
+    - 
+## ⚠️ More Limitations & Gotchas of Partitioning
+
+### 🐌 6. **Slow Updates That Cross Partitions**
+- If an update **changes the partition key** (e.g., `grade`), the row must be:
+  - **Deleted** from the current partition.
+  - **Inserted** into the correct new partition.
+- This is far **slower** than a normal update and can wear out storage (especially SSDs) due to extra writes.
+
+> ⚠️ Avoid updates that move rows between partitions. Design schemas to minimize this.
+
+---
+
+### 🌀 7. **Inefficient Queries Can Hit All Partitions**
+- Queries with vague or non-selective filters may **scan every partition**.
+- Can be **slower than querying a single large table** due to partition overhead.
+
+> 💡 Always write queries that **help the planner prune partitions**, especially for large systems.
+
+---
+
+### 🧩 8. **Schema Changes Can Be Tricky**
+- Changing schema (e.g., adding indexes, constraints) should ideally be done on the **parent partitioned table**.
+- But not all DBMSs **fully propagate changes** down to partitions — depends on the database version and feature support.
+
+> ✅ PostgreSQL 11+ supports auto-index propagation, but be cautious with more complex DDL changes.
+
 
 ---
 
